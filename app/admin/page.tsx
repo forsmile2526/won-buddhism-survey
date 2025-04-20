@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Papa from 'papaparse'
 
 interface Survey {
   id: number
@@ -37,6 +38,32 @@ export default function AdminPage() {
     fetchSurveys()
   }, [])
 
+  const handleExportCSV = () => {
+    const csvData = surveys.map(survey => ({
+      이름: survey.name,
+      나이: survey.age,
+      성별: survey.gender === 'male' ? '남성' : survey.gender === 'female' ? '여성' : '기타',
+      '접촉 경험': survey.experience === 'never' ? '없음' :
+                  survey.experience === 'once' ? '1-2회' :
+                  survey.experience === 'sometimes' ? '가끔' : '자주',
+      의견: survey.feedback,
+      '제출일': new Date(survey.createdAt).toLocaleDateString('ko-KR')
+    }))
+
+    const csv = Papa.unparse(csvData)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `원불교_설문조사_결과_${new Date().toLocaleDateString('ko-KR')}.csv`)
+    link.style.visibility = 'hidden'
+    
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -59,7 +86,15 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">설문조사 결과</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">설문조사 결과</h1>
+        <button
+          onClick={handleExportCSV}
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        >
+          CSV 내보내기
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
