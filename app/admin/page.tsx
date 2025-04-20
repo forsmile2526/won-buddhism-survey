@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
+import SurveyCharts from '@/components/SurveyCharts'
 
 interface Survey {
   id: number
@@ -95,6 +96,9 @@ export default function AdminPage() {
           CSV 내보내기
         </button>
       </div>
+
+      <SurveyCharts surveys={surveys} />
+
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
