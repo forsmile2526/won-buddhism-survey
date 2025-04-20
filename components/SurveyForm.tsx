@@ -10,11 +10,41 @@ export default function SurveyForm() {
     experience: '',
     feedback: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: 폼 데이터 처리 로직 추가
-    console.log('Form submitted:', formData)
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+
+    try {
+      const response = await fetch('/api/survey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit survey')
+      }
+
+      setSubmitStatus('success')
+      setFormData({
+        name: '',
+        age: '',
+        gender: '',
+        experience: '',
+        feedback: ''
+      })
+    } catch (error) {
+      console.error('Error submitting survey:', error)
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -111,12 +141,39 @@ export default function SurveyForm() {
         />
       </div>
 
+      {submitStatus === 'success' && (
+        <div className="rounded-md bg-green-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">제출 완료</h3>
+              <div className="mt-2 text-sm text-green-700">
+                <p>설문조사에 참여해 주셔서 감사합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {submitStatus === 'error' && (
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">오류 발생</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>설문조사 제출 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <button
           type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          disabled={isSubmitting}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          제출하기
+          {isSubmitting ? '제출 중...' : '제출하기'}
         </button>
       </div>
     </form>
