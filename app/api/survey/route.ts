@@ -1,20 +1,34 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    const surveys = await prisma.survey.findMany({
-      orderBy: {
-        createdAt: 'desc'
+    // 임시 데이터
+    const mockData = [
+      {
+        id: 1,
+        name: "홍길동",
+        age: 25,
+        gender: "male",
+        experience: "never",
+        feedback: "원불교에 대해 더 알고 싶습니다.",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 2,
+        name: "김영희",
+        age: 35,
+        gender: "female",
+        experience: "sometimes",
+        feedback: "좋은 인상을 받았습니다.",
+        createdAt: new Date().toISOString()
       }
-    })
-    return NextResponse.json(surveys)
+    ];
+
+    return NextResponse.json(mockData)
   } catch (error) {
     console.error('Error fetching surveys:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch surveys' },
+      { error: "데이터를 불러오는데 실패했습니다." },
       { status: 500 }
     )
   }
@@ -22,25 +36,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { name, age, gender, experience, feedback } = body
-
-    const survey = await prisma.survey.create({
-      data: {
-        name,
-        age: parseInt(age),
-        gender,
-        experience,
-        feedback,
-      },
-    })
-
-    return NextResponse.json(survey, { status: 201 })
+    const data = await request.json()
+    return NextResponse.json({ success: true, data })
   } catch (error) {
-    console.error('Error creating survey:', error)
+    console.error('Error saving survey:', error)
     return NextResponse.json(
-      { error: 'Failed to create survey' },
+      { error: "데이터 저장에 실패했습니다." },
       { status: 500 }
     )
   }
-} 
+}
+
+export const dynamic = 'force-dynamic'; 
