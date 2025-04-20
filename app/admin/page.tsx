@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import SurveyCharts from '@/components/SurveyCharts'
+import SurveyFilters from '@/components/SurveyFilters'
 
 interface Survey {
   id: number
@@ -14,10 +15,22 @@ interface Survey {
   createdAt: string
 }
 
+interface Filters {
+  gender: string
+  experience: string
+  ageRange: string
+}
+
 export default function AdminPage() {
   const [surveys, setSurveys] = useState<Survey[]>([])
+  const [filteredSurveys, setFilteredSurveys] = useState<Survey[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filters, setFilters] = useState<Filters>({
+    gender: '',
+    experience: '',
+    ageRange: ''
+  })
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -28,6 +41,7 @@ export default function AdminPage() {
         }
         const data = await response.json()
         setSurveys(data)
+        setFilteredSurveys(data)
       } catch (error) {
         console.error('Error fetching surveys:', error)
         setError('설문조사 결과를 불러오는데 실패했습니다.')
@@ -39,8 +53,34 @@ export default function AdminPage() {
     fetchSurveys()
   }, [])
 
+  useEffect(() => {
+    let filtered = [...surveys]
+
+    if (filters.gender) {
+      filtered = filtered.filter(survey => survey.gender === filters.gender)
+    }
+
+    if (filters.experience) {
+      filtered = filtered.filter(survey => survey.experience === filters.experience)
+    }
+
+    if (filters.ageRange) {
+      const ageRange = parseInt(filters.ageRange)
+      filtered = filtered.filter(survey => {
+        const surveyAge = Math.floor(survey.age / 10) * 10
+        return surveyAge === ageRange
+      })
+    }
+
+    setFilteredSurveys(filtered)
+  }, [filters, surveys])
+
+  const handleFilterChange = (newFilters: Partial<Filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
   const handleExportCSV = () => {
-    const csvData = surveys.map(survey => ({
+    const csvData = filteredSurveys.map(survey => ({
       이름: survey.name,
       나이: survey.age,
       성별: survey.gender === 'male' ? '남성' : survey.gender === 'female' ? '여성' : '기타',
@@ -97,7 +137,8 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <SurveyCharts surveys={surveys} />
+      <SurveyFilters onFilterChange={handleFilterChange} />
+      <SurveyCharts surveys={filteredSurveys} />
 
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
@@ -124,7 +165,7 @@ export default function AdminPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {surveys.map((survey) => (
+            {filteredSurveys.map((survey) => (
               <tr key={survey.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {survey.name}
